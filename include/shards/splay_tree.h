@@ -12,12 +12,20 @@ Modified a little by Qingpeng Niu for tracing the global chunck library memory u
 template <typename KeyType>
 class SplayTree
 {
+
+public:
     struct Node
     {
         KeyType key;
-        Node * children [2];
+        Node *children[2];
         uint32_t size;
-        Node(KeyType key, uint32_t size, Node * left, Node * right) : key(key), size(size)
+        Node(KeyType key) : Node(key, 0, NULL, NULL)
+        {
+        }
+        Node(KeyType key, uint32_t size) : Node(key, size, NULL, NULL)
+        {
+        }
+        Node(KeyType key, uint32_t size, Node *left, Node *right) : key(key), size(size)
         {
             children[0] = left;
             children[1] = right;
@@ -25,17 +33,22 @@ class SplayTree
         // debug
         void print(int d)
         {
-            if (children[1] != NULL){
+            if (children[1] != NULL)
+            {
                 children[1]->print(d + 1);
             }
             std::cout << std::string(d, ' ') << key << "(" << size << ")" << std::endl;
-            if (children[0] != NULL){
+            if (children[0] != NULL)
+            {
                 children[0]->print(d + 1);
             }
         }
-        void free() {
-            for(auto const& c : children){
-                if(c != NULL){
+        void free()
+        {
+            for (auto const &c : children)
+            {
+                if (c != NULL)
+                {
                     c->free();
                     delete c;
                 }
@@ -47,21 +60,24 @@ class SplayTree
     {
         return node == NULL ? 0 : node->size;
     };
-    static Node* splay(KeyType key, Node* t);
-    Node* find_rank(uint32_t rank);
+    static Node *splay(KeyType key, Node *t);
+    Node *find_rank(uint32_t rank);
 
-public:
     void insert(KeyType key);
     void remove(KeyType key);
     uint32_t calc_distance(KeyType timestamp);
     // debug
-    void print() {
-        if (root != NULL) {
+    void print()
+    {
+        if (root != NULL)
+        {
             root->print(0);
         }
     }
-    ~SplayTree() {
-        if(root != NULL) {
+    ~SplayTree()
+    {
+        if (root != NULL)
+        {
             root->free();
             delete root;
         }

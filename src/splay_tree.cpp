@@ -65,33 +65,37 @@ typename SplayTree<KeyType>::Node *SplayTree<KeyType>::splay(KeyType i, SplayTre
         return t;
     }
 
-    Node N(i, 0, NULL, NULL);
+    Node N(i);
     Node *sides[2] = {&N, &N};
     Node *y;
     uint32_t sizes[2] = {0, 0};
 
     for (;;)
     {
-        auto out_side = i > t->key;
-        if (t->key == i || t->children[out_side] == NULL)
-        {
+        if (t->key == i) {
             break;
-        }
-        if (i != t->children[out_side]->key && ((i > t->children[out_side]->key) == out_side))
-        {
-            y = t->children[out_side]; /* rotate right */
-            t->children[out_side] = y->children[1 - out_side];
-            y->children[1 - out_side] = t;
-            t->size = node_size(t->children[0]) + node_size(t->children[1]) + 1;
-            t = y;
-            if (t->children[out_side] == NULL)
+        } else {
+            auto side = i > t->key;
+            if (t->children[side] == NULL)
             {
                 break;
             }
-            sides[1 - out_side]->children[out_side] = t; /* link right */
-            sides[1 - out_side] = t;
-            t = t->children[out_side];
-            sizes[1 - out_side] += 1 + node_size(sides[1 - out_side]->children[1 - out_side]);
+            if (i != t->children[side]->key && ((i > t->children[side]->key) == side))
+            {
+                y = t->children[side]; /* rotate `side` */
+                t->children[side] = y->children[1 - side];
+                y->children[1 - side] = t;
+                t->size = node_size(t->children[0]) + node_size(t->children[1]) + 1;
+                t = y;
+                if (t->children[side] == NULL)
+                {
+                    break;
+                }
+            }
+            sides[1 - side]->children[side] = t; /* link `side` */
+            sides[1 - side] = t;
+            t = t->children[side];
+            sizes[1 - side] += 1 + node_size(sides[1 - side]->children[1 - side]);
         }
     }
 
@@ -189,13 +193,14 @@ typename SplayTree<KeyType>::Node *SplayTree<KeyType>::find_rank(uint32_t r)
     if (r < SplayTree::node_size(root))
     {
         t = root;
-        while (t != NULL)
-        {
+        while (1) {
             auto lsize = SplayTree::node_size(t->children[0]);
-            bool side = r > lsize;
-            t = t->children[side];
-            if (side)
-            {
+            if (lsize == r) {
+                break;
+            } else if (lsize > r) {
+                t = t->children[0];
+            } else {
+                t = t->children[1];
                 r -= lsize + 1;
             }
         }

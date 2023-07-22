@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(shards CXX)
 set(CMAKE_CXX_STANDARD 17)
-add_library(shards include src/splay_tree.cpp)
+add_library(shards include src/fixed_rate_shards.cpp src/fixed_size_shards.cpp src/splay_tree.cpp)
 add_library(murmurhash3 ext/murmurhash3/MurmurHash3.h ext/murmurhash3/MurmurHash3.cpp)
 target_link_libraries(shards PRIVATE murmurhash3)
-target_include_directories(shards PUBLIC include INTERFACE ext)
+target_include_directories(shards PUBLIC include ext)
 set_target_properties(shards PROPERTIES LINKER_LANGUAGE CXX)
 
 option(SHARDS_BUILD_TESTS "Build tests" OFF)

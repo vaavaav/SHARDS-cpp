@@ -1,5 +1,4 @@
 #include <shards/shards.hpp>
-#include <shards/fixed_rate_shards.hpp>
 #include <memory>
 #include <string>
 #include <iostream>
@@ -27,6 +26,7 @@ int main(int argc, char **argv)
     std::cout << "bucket size: " << bucket_size << std::endl;
 
     auto shards = std::make_shared<FixedRateShards>(T, P, bucket_size);
+    //auto shards = std::make_shared<FixedSizeShards>(4000, bucket_size);
 
     std::ifstream infile(argv[4]);
     std::string line, word;

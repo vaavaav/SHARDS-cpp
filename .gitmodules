@@ -1,0 +1,6 @@
+[submodule "ext/cxxopts"]
+	path = ext/cxxopts
+	url = git@github.com:jarro2783/cxxopts.git
+[submodule "test/cache-trace"]
+	path = test/cache-trace
+	url = git@github.com:twitter/cache-trace.git

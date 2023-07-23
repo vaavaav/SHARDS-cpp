@@ -5,7 +5,8 @@ uint32_t FixedRateShards::calcReuseDist(std::string key)
 {
     uint32_t reuse_dist = 0;
     auto x = time_per_object.emplace(key, num_obj);
-    if (!x.second) {
+    if (!x.second)
+    {
         reuse_dist = distance_tree.calc_distance(x.first->second);
         distance_tree.remove(x.first->second);
         x.first->second = num_obj;
@@ -17,7 +18,8 @@ uint32_t FixedRateShards::calcReuseDist(std::string key)
 void FixedRateShards::updateDistTable(uint32_t bucket)
 {
     auto x = distance_histogram.emplace(bucket, 1);
-    if (!x.second) {
+    if (!x.second)
+    {
         x.first->second++;
     }
 }
@@ -28,7 +30,7 @@ void FixedRateShards::feedKey(std::string key, int size)
 
     uint64_t hash[2];
     MurmurHash3_x86_128(key.data(), size, 0, hash);
-    uint64_t T_i{hash[1] & (P - 1)};
+    uint64_t T_i{hash[1] % P};
 
     if (T_i < T)
     {
@@ -47,7 +49,7 @@ std::unordered_map<uint32_t, double> FixedRateShards::mrc()
     }
 
     std::unordered_map<uint32_t, double> mrc{};
-    std::vector<uint32_t> buckets; 
+    std::vector<uint32_t> buckets;
     buckets.reserve(distance_histogram.size());
     for (auto const &bucket : distance_histogram)
     {

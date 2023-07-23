@@ -19,7 +19,7 @@ public:
         KeyType key;
         Node *children[2];
         uint32_t size;
-        Node(KeyType key) : Node(key, 0, NULL, NULL)
+        Node(KeyType key) : Node(key, 1, NULL, NULL)
         {
         }
         Node(KeyType key, uint32_t size) : Node(key, size, NULL, NULL)
@@ -61,7 +61,7 @@ public:
         return node == NULL ? 0 : node->size;
     };
     static Node *splay(KeyType key, Node *t);
-    Node *find_rank(uint32_t rank);
+    Node *find_max();
 
     void insert(KeyType key);
     void remove(KeyType key);

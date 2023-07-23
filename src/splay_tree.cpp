@@ -72,10 +72,13 @@ typename SplayTree<KeyType>::Node *SplayTree<KeyType>::splay(KeyType i, SplayTre
 
     for (;;)
     {
-        if (t->key == i) {
+        if (t->key == i)
+        {
             break;
-        } else {
-            auto side = i > t->key;
+        }
+        else
+        {
+            auto const side = i > t->key;
             if (t->children[side] == NULL)
             {
                 break;
@@ -99,7 +102,7 @@ typename SplayTree<KeyType>::Node *SplayTree<KeyType>::splay(KeyType i, SplayTre
         }
     }
 
-    t->size++; 
+    t->size++;
     for (auto const &i : {0, 1})
     {
         sizes[i] += node_size(t->children[i]);
@@ -133,7 +136,7 @@ void SplayTree<KeyType>::insert(KeyType i)
     /* Return a pointer to the resulting tree.                   */
     if (root == NULL)
     {
-        root = new Node(i, 1, NULL, NULL);
+        root = new Node(i);
     }
     else
     {
@@ -144,12 +147,13 @@ void SplayTree<KeyType>::insert(KeyType i)
         }
         else
         {
-            bool side = i > t->key;
-            root = new Node(i, 1 + SplayTree::node_size(t->children[0]) + SplayTree::node_size(t->children[1]), NULL, NULL);
+            bool const side = i > t->key;
+            root = new Node(i);
             root->children[side] = t->children[side];
             root->children[1 - side] = t;
             t->children[side] = NULL;
             t->size = 1 + SplayTree::node_size(t->children[1 - side]);
+            root->size = 1 + SplayTree::node_size(root->children[0]) + SplayTree::node_size(root->children[1]);
         }
     }
 }
@@ -166,12 +170,19 @@ void SplayTree<KeyType>::remove(KeyType i)
         { /* found it */
             if (t->children[0] == NULL)
             {
+                auto const old_root_size = root->size;
                 root = t->children[1];
+                if (root != NULL)
+                {
+                    root->size = old_root_size;
+                }
             }
             else
             {
+                auto const old_root_size = root->size;
                 root = splay(i, t->children[0]);
                 root->children[1] = t->children[1];
+                root->size = old_root_size;
             }
             delete t;
         }
@@ -183,26 +194,14 @@ void SplayTree<KeyType>::remove(KeyType i)
 }
 
 template <typename KeyType>
-typename SplayTree<KeyType>::Node *SplayTree<KeyType>::find_rank(uint32_t r)
+typename SplayTree<KeyType>::Node *SplayTree<KeyType>::find_max()
 {
-    /* Returns a pointer to the node in the tree with the given rank.  */
-    /* Returns NULL if there is no such node.                          */
-    /* Does not change the tree.  To guarantee logarithmic behavior,   */
-    /* the node found here should be splayed to the root.              */
-    Node *t = NULL;
-    if (r < SplayTree::node_size(root))
+    Node *t = root;
+    if (t != NULL)
     {
-        t = root;
-        while (1) {
-            auto lsize = SplayTree::node_size(t->children[0]);
-            if (lsize == r) {
-                break;
-            } else if (lsize > r) {
-                t = t->children[0];
-            } else {
-                t = t->children[1];
-                r -= lsize + 1;
-            }
+        while (t->children[1] != NULL)
+        {
+            t = t->children[1];
         }
     }
     return t;

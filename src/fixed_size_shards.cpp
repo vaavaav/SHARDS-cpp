@@ -35,7 +35,7 @@ void FixedSizeShards::feedKey(std::string key, int size)
 
     uint64_t hash[2];
     MurmurHash3_x86_128(key.data(), size, 0, hash);
-    uint64_t T_i{hash[1] & (P - 1)};
+    uint64_t T_i{hash[1] % P};
 
     if (T_i < T)
     {
@@ -53,7 +53,9 @@ void FixedSizeShards::feedKey(std::string key, int size)
             if (set_size > Smax)
             {
                 // Eviction
-                auto evict_tree = SplayTree<uint32_t>::splay(set_tree.root->key, set_tree.find_rank(set_tree.root->size - 1));
+                // auto evict_tree = set_tree.find_rank(set_tree.root->size - 1);
+                // evict_tree = SplayTree<uint32_t>::splay(evict_tree->key, evict_tree);
+                auto evict_tree = set_tree.find_max();
                 auto eviction_key = evict_tree->key;
 
                 for (auto const &key : set_table[evict_tree])
@@ -89,7 +91,7 @@ std::unordered_map<uint32_t, double> FixedSizeShards::mrc()
     for (uint32_t i = 0; i < buckets.size(); i++)
     {
         auto f = distance_histogram[buckets[i]];
-        sum += (f.T == T) ? f.frequency : static_cast<uint32_t>(f.frequency * static_cast<double>(T / f.T));
+        sum += (f.T == T) ? f.frequency : static_cast<uint32_t>(f.frequency * static_cast<double>(T) / f.T);
         mrc[buckets[i]] = sum;
     }
     for (auto const &bucket : buckets)

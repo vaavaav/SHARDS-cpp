@@ -63,7 +63,6 @@ class FixedSizeShards : public Shards
 
 public:
     FixedSizeShards(uint32_t const initialT, uint32_t const P, uint32_t const Smax, uint32_t bucket_size) : T(initialT), P(P), Smax(Smax), bucket_size(bucket_size){};
-    FixedSizeShards(uint32_t const Smax, uint32_t bucket_size) : FixedSizeShards((1 << 24)*0.001, 1 << 24, Smax, bucket_size){};
     void feedKey(std::string key, int size) override final;
     std::unordered_map<uint32_t, double> mrc() override final;
 };

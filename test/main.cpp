@@ -1,39 +1,53 @@
 #include <shards/shards.hpp>
+#include <cxxopts.hpp>
 #include <memory>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
-// write the main function
+
 int main(int argc, char **argv)
 {
 
-    /*
-        argv[1] = T
-        argv[2] = P
-        argv[3] = bucket size
-        argv[4] = tracefile
-        argv[5] = mrc file
-        argv[6] = s_max
-    */
+    cxxopts::Options options("shards with twitter traces", "");
+    auto opts = options.add_options();
+    opts("m", "Type of shards", cxxopts::value<std::string>());
+    opts("t,threshold", "Threshold", cxxopts::value<uint32_t>());
+    opts("p,modulus", "Modulus", cxxopts::value<uint32_t>());
+    opts("b,bucket_size", "Bucket Size", cxxopts::value<uint32_t>());
+    opts("f,tracefile", "Trace File", cxxopts::value<std::string>());
+    opts("s", "Smax", cxxopts::value<uint32_t>());
+    opts("h,help", "Print usage");
 
-    uint32_t T = strtol(argv[1], NULL, 10);
-    uint32_t P = strtol(argv[2], NULL, 10);
-    uint32_t bucket_size = strtol(argv[3], NULL, 10);
-    uint32_t Smax = strtol(argv[6], NULL, 10);
-    
-    std::cout << "T: " << T << std::endl;
-    std::cout << "P: " << P << std::endl;
-    std::cout << "bucket size: " << bucket_size << std::endl;
+    auto result = options.parse(argc, argv);
+    if (result.count("help"))
+    {
+        std::cout << options.help() << std::endl;
+        exit(0);
+    }
 
-    auto frshards = std::make_shared<FixedRateShards>((1<<24)/1000, 1<<24, bucket_size);
-    auto fsshards = std::make_shared<FixedSizeShards>((1<<24)/1000, 1<<24, Smax, bucket_size);
+    std::string type = result["m"].as<std::string>();
+    uint32_t T = result["t"].as<uint32_t>();
+    uint32_t P = result["p"].as<uint32_t>();
+    uint32_t bucket_size = result["b"].as<uint32_t>();
+    volatile uint32_t Smax; 
+    std::string tracefile = result["f"].as<std::string>();
 
-    std::ifstream infile(argv[4]);
+    std::shared_ptr<Shards> shards;
+    if (type == "fixed_size") {
+        Smax = result["s"].as<uint32_t>();
+        shards = std::make_shared<FixedSizeShards>(T, P, Smax, bucket_size);
+    } else if(type == "fixed_rate") {
+        shards = std::make_shared<FixedRateShards>(T, P, bucket_size);
+    } else {
+        std::cout << "Invalid type" << std::endl;
+        exit(1);
+    }
+
+    std::ifstream infile(tracefile);
     std::string line, word;
 
-    clock_t start_time = clock();
     while (getline(infile, line))
     {
         std::stringstream str(line);
@@ -43,29 +57,18 @@ int main(int argc, char **argv)
         {
             row.push_back(word);
         }
-        //std::cout << row[1] << "," << row[2] << "," << row[5] << std::endl;
-        //if (row[5] == "get")
+
+        if (row[5] == "get")
         {
-            fsshards->feedKey(row[1], strtol(row[2].c_str(), NULL, 10));
-            frshards->feedKey(row[1], strtol(row[2].c_str(), NULL, 10));
+            shards->feedKey(row[1], strtol(row[2].c_str(), NULL, 10));
         }
     }
-    std::cout << "end of file" << std::endl;
 
-    auto fsmrc = fsshards->mrc();
-    auto frmrc = frshards->mrc();
-    std::ofstream mrc_file(argv[5]);
-    for (auto const &[key, val] : fsmrc)
+    for (auto const &[key, val] : shards->mrc())
     {
-        mrc_file << "Fixed Size" << "," << key << "," << val << std::endl;
+        std::cout << key << "," << val << std::endl;
     }
-    for (auto const &[key, val] : frmrc)
-    {
-        mrc_file << "Fixed Rate" << "," << key << "," << val << std::endl;
-    }
-    mrc_file.close();
 
-    clock_t end_time = clock();
 
     return 0;
 }

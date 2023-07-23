@@ -1,5 +1,5 @@
 #include <shards/shards.hpp>
-#include <murmurhash3/MurmurHash3.h>
+#include <MurmurHash3.h>
 
 uint32_t FixedSizeShards::calcReuseDist(std::string key)
 {
@@ -40,8 +40,7 @@ void FixedSizeShards::feedKey(std::string key, int size)
     if (T_i < T)
     {
         num_obj++;
-        auto reuse_dist = static_cast<uint32_t>(calcReuseDist(key) * static_cast<double>(P) / T);
-        auto bucket = reuse_dist == 0 ? 0 : ((reuse_dist - 1) / bucket_size) * bucket_size + bucket_size;
+        auto bucket = static_cast<uint32_t>(calcReuseDist(key) * static_cast<double>(P) / T / bucket_size) * bucket_size;
         updateDistTable(bucket);
 
         // Insert <key, T_i> into Set s
@@ -91,8 +90,8 @@ std::unordered_map<uint32_t, double> FixedSizeShards::mrc()
     for (uint32_t i = 0; i < buckets.size(); i++)
     {
         auto f = distance_histogram[buckets[i]];
-        sum += (f.T == T) ? f.frequency : static_cast<uint32_t>(f.frequency * static_cast<double>(T) / f.T);
         mrc[buckets[i]] = sum;
+        sum += (f.T == T) ? f.frequency : static_cast<uint32_t>(f.frequency * static_cast<double>(T) / f.T);
     }
     for (auto const &bucket : buckets)
     {

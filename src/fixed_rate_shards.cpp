@@ -1,5 +1,5 @@
 #include <shards/shards.hpp>
-#include <murmurhash3/MurmurHash3.h>
+#include <MurmurHash3.h>
 
 uint32_t FixedRateShards::calcReuseDist(std::string key)
 {
@@ -35,8 +35,7 @@ void FixedRateShards::feedKey(std::string key, int size)
     if (T_i < T)
     {
         num_obj++;
-        auto reuse_dist = static_cast<uint32_t>(calcReuseDist(key) * static_cast<double>(P) / T);
-        auto bucket = reuse_dist == 0 ? 0 : ((reuse_dist - 1) / bucket_size) * bucket_size + bucket_size;
+        auto bucket = static_cast<uint32_t>(calcReuseDist(key) * static_cast<double>(P) / T / bucket_size) * bucket_size;
         updateDistTable(bucket);
     }
 }
@@ -60,8 +59,8 @@ std::unordered_map<uint32_t, double> FixedRateShards::mrc()
     uint32_t sum{0};
     for (uint32_t i = 0; i < buckets.size(); i++)
     {
-        sum += distance_histogram[buckets[i]];
         mrc[buckets[i]] = sum;
+        sum += distance_histogram[buckets[i]];
     }
     for (auto const &bucket : buckets)
     {

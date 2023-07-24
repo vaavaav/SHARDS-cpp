@@ -40,7 +40,8 @@ void FixedSizeShards::feedKey(std::string key, int size)
     if (T_i < T)
     {
         num_obj++;
-        auto bucket = static_cast<uint32_t>(calcReuseDist(key) * static_cast<double>(P) / T / bucket_size) * bucket_size;
+        auto reuse_dist = calcReuseDist(key);
+        auto bucket = reuse_dist == 0 ? 0 : static_cast<uint32_t>(reuse_dist * static_cast<double>(P) / T / bucket_size) * bucket_size + bucket_size;
         updateDistTable(bucket);
 
         // Insert <key, T_i> into Set s
@@ -87,11 +88,16 @@ std::unordered_map<uint32_t, double> FixedSizeShards::mrc()
     std::sort(buckets.begin(), buckets.end());
 
     uint32_t sum{0};
-    for (uint32_t i = 0; i < buckets.size(); i++)
+    for (uint32_t i = 1; i < buckets.size(); i++)
     {
         auto f = distance_histogram[buckets[i]];
-        mrc[buckets[i]] = sum;
         sum += (f.T == T) ? f.frequency : static_cast<uint32_t>(f.frequency * static_cast<double>(T) / f.T);
+        mrc[buckets[i]] = sum;
+    }
+    {
+        auto f = distance_histogram[buckets[0]];
+        sum += (f.T == T) ? f.frequency : static_cast<uint32_t>(f.frequency * static_cast<double>(T) / f.T);
+        mrc[buckets[0]] = sum;
     }
     for (auto const &bucket : buckets)
     {

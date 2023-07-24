@@ -9,7 +9,7 @@ import numpy as np
 cwd = os.getcwd()
 executable=f"{cwd}/build/shards_test"
 path = f"{cwd}/test/cache-trace/samples/2020Mar"
-traces = os.listdir(path)
+traces = sorted(os.listdir(path))
 smaxs = [128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32786]
 T = 1000
 P = 1000000

@@ -35,8 +35,11 @@ void FixedRateShards::feedKey(std::string key, int size)
     if (T_i < T)
     {
         num_obj++;
-        if (auto reuse_dist = calcReuseDist(key) * static_cast<double>(P) / T; reuse_dist > 0) {
-            updateDistTable( (1 + reuse_dist / bucket_size) * bucket_size);
+
+        auto reuse_dist = calcReuseDist(key); 
+        if (reuse_dist > 0)
+        {
+            updateDistTable(static_cast<uint32_t>(1 + reuse_dist * static_cast<double>(P) / T / bucket_size) * bucket_size);
         }
     }
 }

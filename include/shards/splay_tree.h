@@ -13,7 +13,6 @@ template <typename KeyType>
 class SplayTree
 {
 
-public:
     struct Node
     {
         KeyType key;
@@ -60,8 +59,10 @@ public:
     {
         return node == NULL ? 0 : node->size;
     };
+
+public:
     static Node *splay(KeyType key, Node *t);
-    Node *find_max();
+    KeyType unsafe_max();
 
     void insert(KeyType key);
     void remove(KeyType key);

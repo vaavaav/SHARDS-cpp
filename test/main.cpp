@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     opts("p,modulus", "Modulus", cxxopts::value<uint32_t>());
     opts("b,bucket_size", "Bucket Size", cxxopts::value<uint32_t>());
     opts("f,tracefile", "Trace File", cxxopts::value<std::string>());
-    opts("s", "Smax", cxxopts::value<uint32_t>());
+    opts("s", "S_max", cxxopts::value<uint32_t>());
     opts("h,help", "Print usage");
 
     auto result = options.parse(argc, argv);
@@ -31,13 +31,13 @@ int main(int argc, char **argv)
     uint32_t T = result["t"].as<uint32_t>();
     uint32_t P = result["p"].as<uint32_t>();
     uint32_t bucket_size = result["b"].as<uint32_t>();
-    volatile uint32_t Smax; 
+    volatile uint32_t S_max; 
     std::string tracefile = result["f"].as<std::string>();
 
     std::shared_ptr<Shards> shards;
     if (type == "fixed_size") {
-        Smax = result["s"].as<uint32_t>();
-        shards = std::make_shared<FixedSizeShards>(T, P, Smax, bucket_size);
+        S_max = result["s"].as<uint32_t>();
+        shards = std::make_shared<FixedSizeShards>(T, P, S_max, bucket_size);
     } else if(type == "fixed_rate") {
         shards = std::make_shared<FixedRateShards>(T, P, bucket_size);
     } else {

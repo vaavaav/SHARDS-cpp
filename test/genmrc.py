@@ -9,15 +9,15 @@ import numpy as np
 cwd = os.getcwd()
 executable=f"{cwd}/build/shards_test"
 path = f"{cwd}/test/cache-trace/samples/2020Mar"
-traces = ['cluster027']
-smaxs = [128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32786]
-T = 1000
-P = 1000000
+traces = sorted(os.listdir(path))
+smaxs = [128, 512, 2048, 8192, 32786]
+P = 1<<24 
+T = P//1000
 B = 100
 
 
 setups = {
-    "Fixed Rate": {
+    f"Fixed Rate (B={B})": {
         "m": "fixed_rate",
         "t": T,
         "p": P,
@@ -25,12 +25,12 @@ setups = {
     }
 }
 for smax in smaxs:
-    setups[f"Fixed Size ({smax})"] = {
+    setups[f"Fixed Size (S={smax}) (B={smax//100})"] = {
         "m": "fixed_size",
         "t": T,
         "p": P,
-        "b": B,
-        "s": smax,
+        "b": smax // 100,
+        "s": smax, 
     }
 
 

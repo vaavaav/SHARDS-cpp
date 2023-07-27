@@ -35,8 +35,12 @@ void FixedRateShards::feedKey(std::string key, int size)
     if (T_i < T)
     {
         num_obj++;
-        auto bucket = static_cast<uint32_t>(calcReuseDist(key) * static_cast<double>(P) / T / bucket_size) * bucket_size;
-        updateDistTable(bucket);
+
+        auto reuse_dist = calcReuseDist(key); 
+        if (reuse_dist > 0)
+        {
+            updateDistTable(static_cast<uint32_t>(1 + reuse_dist * static_cast<double>(P) / T / bucket_size) * bucket_size);
+        }
     }
 }
 
@@ -59,8 +63,8 @@ std::unordered_map<uint32_t, double> FixedRateShards::mrc()
     uint32_t sum{0};
     for (uint32_t i = 0; i < buckets.size(); i++)
     {
-        mrc[buckets[i]] = sum;
         sum += distance_histogram[buckets[i]];
+        mrc[buckets[i]] = sum;
     }
     for (auto const &bucket : buckets)
     {

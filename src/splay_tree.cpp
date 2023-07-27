@@ -102,13 +102,11 @@ typename SplayTree<KeyType>::Node *SplayTree<KeyType>::splay(KeyType i, SplayTre
         }
     }
 
-    t->size++;
-    for (auto const &i : {0, 1})
-    {
-        sizes[i] += node_size(t->children[i]);
-        sides[i]->children[1 - i] = NULL;
-        t->size += sizes[i];
-    }
+    sizes[0] += node_size(t->children[0]);
+    sizes[1] += node_size(t->children[1]);
+    t->size = sizes[0] + sizes[1] + 1;
+    sides[0]->children[1] = sides[1]->children[0] = NULL;
+
     for (auto const &i : {0, 1})
     {
         /* The following two loops correct the size fields of the right path  */
@@ -153,7 +151,7 @@ void SplayTree<KeyType>::insert(KeyType i)
             root->children[1 - side] = t;
             t->children[side] = NULL;
             t->size = 1 + SplayTree::node_size(t->children[1 - side]);
-            root->size = 1 + SplayTree::node_size(root->children[0]) + SplayTree::node_size(root->children[1]);
+            root->size = 1 + SplayTree::node_size(t->children[0]) + SplayTree::node_size(t->children[1]); 
         }
     }
 }
@@ -174,7 +172,7 @@ void SplayTree<KeyType>::remove(KeyType i)
                 root = t->children[1];
                 if (root != NULL)
                 {
-                    root->size = old_root_size;
+                    root->size = old_root_size - 1;
                 }
             }
             else
@@ -182,7 +180,7 @@ void SplayTree<KeyType>::remove(KeyType i)
                 auto const old_root_size = root->size;
                 root = splay(i, t->children[0]);
                 root->children[1] = t->children[1];
-                root->size = old_root_size;
+                root->size = old_root_size - 1;
             }
             delete t;
         }
@@ -194,17 +192,14 @@ void SplayTree<KeyType>::remove(KeyType i)
 }
 
 template <typename KeyType>
-typename SplayTree<KeyType>::Node *SplayTree<KeyType>::find_max()
+KeyType SplayTree<KeyType>::unsafe_max()
 {
     Node *t = root;
-    if (t != NULL)
+    while (t->children[1] != NULL)
     {
-        while (t->children[1] != NULL)
-        {
-            t = t->children[1];
-        }
+        t = t->children[1];
     }
-    return t;
+    return t->key;
 }
 
 /*

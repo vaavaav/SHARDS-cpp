@@ -22,7 +22,7 @@ void FixedSizeShards::updateDistTable(uint32_t bucket)
     {
         if (x.first->second.T != T)
         {
-            x.first->second.frequency *= static_cast<double>(T) / x.first->second.T;
+            x.first->second.frequency = static_cast<uint32_t>(x.first->second.frequency * static_cast<double>(T) / x.first->second.T + 1);
             x.first->second.T = T;
         }
         x.first->second.frequency++;
@@ -40,32 +40,28 @@ void FixedSizeShards::feedKey(std::string key, int size)
     if (T_i < T)
     {
         num_obj++;
-        auto bucket = static_cast<uint32_t>(calcReuseDist(key) * static_cast<double>(P) / T / bucket_size) * bucket_size;
-        updateDistTable(bucket);
-
-        // Insert <key, T_i> into Set s
-        set_tree.insert(T_i);
-        // Lookup the list associated with the value T_i
-        if (auto x = set_table.emplace(set_tree.root, std::unordered_set{key}); x.second || (!x.second && x.first->second.insert(key).second))
+        auto reuse_dist = calcReuseDist(key);
+        if (reuse_dist > 0)
         {
-            set_size++;
-            if (set_size > Smax)
+            updateDistTable(static_cast<uint32_t>(1 + reuse_dist * static_cast<double>(P) / T / bucket_size) * bucket_size);
+        }
+        if (auto x = set_table.emplace(T_i, std::unordered_set{key}); x.second || (!x.second && x.first->second.insert(key).second))
+        {
+            set_tree.insert(T_i);
+            if (++set_size > S_max)
             {
                 // Eviction
-                // auto evict_tree = set_tree.find_rank(set_tree.root->size - 1);
-                // evict_tree = SplayTree<uint32_t>::splay(evict_tree->key, evict_tree);
-                auto evict_tree = set_tree.find_max();
-                auto eviction_key = evict_tree->key;
+                auto T_max = set_tree.unsafe_max();
 
-                for (auto const &key : set_table[evict_tree])
+                for (auto const &k : set_table[T_max])
                 {
-                    distance_tree.remove(time_per_object[key]);
-                    time_per_object.erase(key);
+                    distance_tree.remove(time_per_object[k]);
+                    time_per_object.erase(k);
                     set_size--;
                 }
-                set_table.erase(evict_tree);
-                set_tree.remove(eviction_key);
-                T = eviction_key;
+                set_table.erase(T_max);
+                set_tree.remove(T_max);
+                T = T_max;
             }
         }
     }
@@ -90,8 +86,8 @@ std::unordered_map<uint32_t, double> FixedSizeShards::mrc()
     for (uint32_t i = 0; i < buckets.size(); i++)
     {
         auto f = distance_histogram[buckets[i]];
+        sum += (f.T == T) ? f.frequency : static_cast<uint32_t>(f.frequency * (static_cast<double>(T) / f.T));
         mrc[buckets[i]] = sum;
-        sum += (f.T == T) ? f.frequency : static_cast<uint32_t>(f.frequency * static_cast<double>(T) / f.T);
     }
     for (auto const &bucket : buckets)
     {

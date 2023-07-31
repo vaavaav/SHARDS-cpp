@@ -1,0 +1,14 @@
+@PACKAGE_INIT@
+
+set_and_check(shards_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
+set_and_check(shards_CMAKE_DIR "@PACKAGE_CMAKE_INSTALL_DIR@")
+
+if (NOT TARGET shards::shards)
+   include("${shards_CMAKE_DIR}/shardsTargets.cmake")
+endif()
+
+set(shards_LIBRARIES shards)
+
+if (NOT shards_FIND_QUIETLY)
+  message(STATUS "Found shards: ${PACKAGE_PREFIX_DIR}")
+endif()

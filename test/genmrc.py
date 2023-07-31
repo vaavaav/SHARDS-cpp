@@ -47,6 +47,7 @@ for trace in traces:
                 [cache_size, miss_rate] = line.split(',')
                 results.append([int(cache_size), float(miss_rate)])
         results = np.array(sorted(results, key=lambda x: x[0]))
+        print(f"{{{','.join([f'{{{int(k)},{float(v)}}}' for [k,v] in results])}}}")
         plt.plot(results[:,0], results[:,1], label=setup, marker='o')
     plt.legend(bbox_to_anchor=(1,0.5))
     plt.xlabel("cache size")

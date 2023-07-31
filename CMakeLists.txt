@@ -1,17 +1,60 @@
 cmake_minimum_required(VERSION 3.10)
-project(shards CXX)
+
+if(NOT DEFINED PACKAGE_VERSION)
+  set(PACKAGE_VERSION "1.0.0")
+endif()
+
+project(shards VERSION ${PACKAGE_VERSION} LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
-add_library(shards include src/fixed_rate_shards.cpp src/fixed_size_shards.cpp src/splay_tree.cpp)
-add_library(murmurhash3 ext/MurmurHash3 ext/MurmurHash3/MurmurHash3.cpp)
-target_link_libraries(shards PRIVATE murmurhash3)
-target_include_directories(shards PUBLIC include ext/MurmurHash3)
-set_target_properties(shards PROPERTIES LINKER_LANGUAGE CXX)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(SHARDS_BUILD_TESTS " Build tests " OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/" ${CMAKE_MODULE_PATH})
 
-if(SHARDS_BUILD_TESTS)
-    add_subdirectory(ext/cxxopts)
-    add_executable(shards_test test/main.cpp)
-    target_link_libraries(shards_test PRIVATE shards)
-    target_include_directories(shards_test PRIVATE ext/cxxopts/include)
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(INCLUDE_INSTALL_DIR include CACHE STRING "The subdirectory where header files should be installed")
+set(LIB_INSTALL_DIR lib CACHE STRING "The subdirectory where libraries should be installed")
+set(BIN_INSTALL_DIR bin CACHE STRING "The subdirectory where binaries should be installed")
+set(CMAKE_INSTALL_DIR lib/cmake/${PROJECT_NAME} CACHE STRING "The subdirectory where CMake package config files should be installed")
+
+include(GNUInstallDirs)
+
+add_library(${PROJECT_NAME} include src/fixed_rate_shards.cpp src/fixed_size_shards.cpp src/splay_tree.cpp ext/MurmurHash3 ext/MurmurHash3/MurmurHash3.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE ext/MurmurHash3 PUBLIC "$<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>" "$<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>")
+
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-exports DESTINATION ${LIB_INSTALL_DIR})
+install(DIRECTORY "include/${PROJECT_NAME}" DESTINATION ${INCLUDE_INSTALL_DIR})
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  cmake/${PROJECT_NAME}-config.cmake.in
+  ${PROJECT_NAME}-config.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_DIR}
+  PATH_VARS
+  INCLUDE_INSTALL_DIR
+  CMAKE_INSTALL_DIR
+)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
+  DESTINATION ${CMAKE_INSTALL_DIR}
+)
+install(
+  EXPORT ${PROJECT_NAME}-exports
+  FILE ${PROJECT_NAME}Targets.cmake
+  NAMESPACE ${PROJECT_NAME}::
+  DESTINATION ${CMAKE_INSTALL_DIR}
+)
+
+option(BUILD_TESTS " Build tests " OFF)
+
+if(BUILD_TESTS)
+  add_subdirectory(ext/cxxopts)
+  add_executable(shards_test test/main.cpp)
+  target_link_libraries(shards_test PRIVATE ${PROJECT_NAME})
+  target_include_directories(shards_test PRIVATE ext/cxxopts/include)
 endif()

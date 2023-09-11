@@ -7,13 +7,14 @@ import subprocess
 import numpy as np
 
 cwd = os.getcwd()
-executable=f"{cwd}/build/shards_test"
+executable=f"{cwd}/build/bin/shards_test"
 path = f"{cwd}/test/cache-trace/samples/2020Mar"
 traces = sorted(os.listdir(path))
 smaxs = [128, 512, 2048, 8192, 32786]
 P = 1<<24 
 T = P//1000
 B = 100
+R = 0.001
 
 
 setups = {
@@ -22,6 +23,7 @@ setups = {
         "t": T,
         "p": P,
         "b": B,
+        "r": R,
     }
 }
 for smax in smaxs:
@@ -31,6 +33,7 @@ for smax in smaxs:
         "p": P,
         "b": smax // 100,
         "s": smax, 
+        "r": R,
     }
 
 

@@ -1,6 +1,5 @@
-#include <shards/splay_tree.h>
-#include <iostream>
-
+#include <Shards/SplayTree.h>
+#include <initializer_list>
 /*
            An implementation of top-down splaying with sizes
              D. Sleator <sleator@cs.cmu.edu>, January 1994.
@@ -70,36 +69,24 @@ typename SplayTree<KeyType>::Node *SplayTree<KeyType>::splay(KeyType i, SplayTre
     Node *y;
     uint32_t sizes[2] = {0, 0};
 
-    for (;;)
+    for (bool side; t->key != i && t->children[(side = i > t->key)] != NULL;)
     {
-        if (t->key == i)
+        if (i != t->children[side]->key && ((i > t->children[side]->key) == side))
         {
-            break;
-        }
-        else
-        {
-            auto const side = i > t->key;
+            y = t->children[side]; /* rotate `side` */
+            t->children[side] = y->children[1 - side];
+            y->children[1 - side] = t;
+            t->size = node_size(t->children[0]) + node_size(t->children[1]) + 1;
+            t = y;
             if (t->children[side] == NULL)
             {
                 break;
             }
-            if (i != t->children[side]->key && ((i > t->children[side]->key) == side))
-            {
-                y = t->children[side]; /* rotate `side` */
-                t->children[side] = y->children[1 - side];
-                y->children[1 - side] = t;
-                t->size = node_size(t->children[0]) + node_size(t->children[1]) + 1;
-                t = y;
-                if (t->children[side] == NULL)
-                {
-                    break;
-                }
-            }
-            sides[1 - side]->children[side] = t; /* link `side` */
-            sides[1 - side] = t;
-            t = t->children[side];
-            sizes[1 - side] += 1 + node_size(sides[1 - side]->children[1 - side]);
         }
+        sides[1 - side]->children[side] = t; /* link `side` */
+        sides[1 - side] = t;
+        t = t->children[side];
+        sizes[1 - side] += 1 + node_size(sides[1 - side]->children[1 - side]);
     }
 
     sizes[0] += node_size(t->children[0]);
@@ -128,6 +115,12 @@ typename SplayTree<KeyType>::Node *SplayTree<KeyType>::splay(KeyType i, SplayTre
 }
 
 template <typename KeyType>
+void SplayTree<KeyType>::splay(KeyType i)
+{
+    root = splay(i, root);
+}
+
+template <typename KeyType>
 void SplayTree<KeyType>::insert(KeyType i)
 {
     /* Insert key i into the tree t, if it is not already there. */
@@ -151,13 +144,13 @@ void SplayTree<KeyType>::insert(KeyType i)
             root->children[1 - side] = t;
             t->children[side] = NULL;
             t->size = 1 + SplayTree::node_size(t->children[1 - side]);
-            root->size = 1 + SplayTree::node_size(t->children[0]) + SplayTree::node_size(t->children[1]); 
+            root->size = 1 + SplayTree::node_size(root->children[0]) + SplayTree::node_size(root->children[1]);
         }
     }
 }
 
 template <typename KeyType>
-void SplayTree<KeyType>::remove(KeyType i)
+void SplayTree<KeyType>::erase(KeyType i)
 {
     /* Deletes i from the tree if it's there.               */
     /* Return a pointer to the resulting tree.              */
@@ -166,40 +159,23 @@ void SplayTree<KeyType>::remove(KeyType i)
         Node *t = splay(i, root);
         if (i == t->key)
         { /* found it */
+            auto const old_root_size = root->size;
             if (t->children[0] == NULL)
             {
-                auto const old_root_size = root->size;
                 root = t->children[1];
-                if (root != NULL)
-                {
-                    root->size = old_root_size - 1;
-                }
             }
             else
             {
-                auto const old_root_size = root->size;
                 root = splay(i, t->children[0]);
                 root->children[1] = t->children[1];
+            }
+            if (root != NULL)
+            {
                 root->size = old_root_size - 1;
             }
             delete t;
         }
-        else
-        {
-            root = t;
-        }
     }
-}
-
-template <typename KeyType>
-KeyType SplayTree<KeyType>::unsafe_max()
-{
-    Node *t = root;
-    while (t->children[1] != NULL)
-    {
-        t = t->children[1];
-    }
-    return t->key;
 }
 
 /*
@@ -221,20 +197,20 @@ For the 5th object read in the trace ( the second instance of 'a'), we call calc
 Meaning that there are at least three values equal or greater than a.
 */
 template <typename KeyType>
-uint32_t SplayTree<KeyType>::calc_distance(KeyType timestamp)
+uint32_t SplayTree<KeyType>::greater_or_equal_to(KeyType key) const
 {
-    int distance = 1;
+    uint32_t counter = 0;
     Node *t = root;
     while (t != NULL)
     {
-        if (timestamp == t->key)
+        if (key == t->key)
         {
-            distance += SplayTree::node_size(t->children[1]);
+            counter += SplayTree::node_size(t->children[1]) + 1;
             break;
         }
-        else if (timestamp < t->key)
+        else if (key < t->key)
         {
-            distance += SplayTree::node_size(t->children[1]) + 1;
+            counter += SplayTree::node_size(t->children[1]) + 1;
             t = t->children[0];
         }
         else
@@ -242,7 +218,8 @@ uint32_t SplayTree<KeyType>::calc_distance(KeyType timestamp)
             t = t->children[1];
         }
     }
-    return distance;
+    return counter;
 }
 
 template class SplayTree<uint32_t>;
+template class SplayTree<uint64_t>;

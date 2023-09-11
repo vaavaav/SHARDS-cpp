@@ -4,7 +4,7 @@ if(NOT DEFINED PACKAGE_VERSION)
   set(PACKAGE_VERSION "1.0.0")
 endif()
 
-project(shards VERSION ${PACKAGE_VERSION} LANGUAGES CXX C)
+project(Shards VERSION ${PACKAGE_VERSION} LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -24,8 +24,9 @@ set(CMAKE_INSTALL_DIR lib/cmake/${PROJECT_NAME} CACHE STRING "The subdirectory w
 
 include(GNUInstallDirs)
 
-add_library(${PROJECT_NAME} include src/fixed_rate_shards.cpp src/fixed_size_shards.cpp src/splay_tree.cpp ext/MurmurHash3 ext/MurmurHash3/MurmurHash3.cpp)
-target_include_directories(${PROJECT_NAME} PRIVATE ext/MurmurHash3 PUBLIC "$<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>" "$<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>")
+file(GLOB SOURCES "src/*.cpp")
+add_library(${PROJECT_NAME} ${SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>" "$<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>" PRIVATE ext/xxhash)
 
 install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-exports DESTINATION ${LIB_INSTALL_DIR})
 install(DIRECTORY "include/${PROJECT_NAME}" DESTINATION ${INCLUDE_INSTALL_DIR})
@@ -55,6 +56,6 @@ option(BUILD_TESTS " Build tests " OFF)
 if(BUILD_TESTS)
   add_subdirectory(ext/cxxopts)
   add_executable(shards_test test/main.cpp)
-  target_link_libraries(shards_test PRIVATE ${PROJECT_NAME})
+  target_link_libraries(shards_test ${PROJECT_NAME})
   target_include_directories(shards_test PRIVATE ext/cxxopts/include)
 endif()

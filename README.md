@@ -1,6 +1,6 @@
 # SHARDS-cpp
 
-This is an implementation of the miss ratio curve online construction technique [SHARDS](https://www.usenix.org/conference/fast15/technical-sessions/presentation/waldspurger) in C++. It is heavily inspired in [SHARDS-C](https://github.com/jorgermurillo/SHARDS-C), a fanmade implementation in C.
+This is an implementation of the miss ratio curve online construction technique [SHARDS](https://www.usenix.org/conference/fast15/technical-sessions/presentation/waldspurger) in C++. It is heavily inspired by [SHARDS-C](https://github.com/jorgermurillo/SHARDS-C), a fanmade implementation in C.
 
 ## Integration through CMake 
 

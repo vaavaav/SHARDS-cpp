@@ -35,26 +35,29 @@ uint32_t ShardsFixedSize::getDistance(std::string const &key)
     return distance;
 }
 
-void ShardsFixedSize::updateHistogram(uint32_t const bucket)
+void ShardsFixedSize::updateHistogram(uint32_t const bucket, size_t const range)
 {
-    auto const [pair, inserted] = m_distanceHistogram.emplace(bucket, FrequencyType{m_T, 1});
-    if (!inserted)
+    for (size_t i = 0; i <= range; i++)
     {
-        // if bucket already existed (therefore, emplace successful)
-        auto &[T, f] = pair->second;
-        if (T != m_T)
+        auto const [pair, inserted] = m_distanceHistogram.emplace(bucket + i * kBucketSize, FrequencyType{m_T, 1});
+        if (!inserted)
         {
-            f = 2 + f * static_cast<double>(m_T) / T;
-            T = m_T;
-        }
-        else
-        {
-            f++;
+            // if bucket already existed (therefore, emplace successful)
+            auto &[T, f] = pair->second;
+            if (T != m_T)
+            {
+                f = 2 + f * static_cast<double>(m_T) / T;
+                T = m_T;
+            }
+            else
+            {
+                f++;
+            }
         }
     }
 }
 
-void ShardsFixedSize::feed(std::string const &key)
+void ShardsFixedSize::feed(std::string const &key, size_t const &itemSize)
 {
     uint64_t const Ti{Shards::hash(key) % kP};
 
@@ -62,7 +65,7 @@ void ShardsFixedSize::feed(std::string const &key)
     {
         m_objectCounter++;
         uint32_t const distance = getDistance(key) / m_R;
-        updateHistogram(distance == 0 ? 0 : ((distance - 1) / kBucketSize) * kBucketSize + kBucketSize);
+        updateHistogram(distance == 0 ? 0 : ((distance - 1) / kBucketSize) * kBucketSize + kBucketSize, (itemSize - 1) / kBucketSize);
 
         if (distance == 0)
         { // then key is new

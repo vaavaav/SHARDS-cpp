@@ -67,7 +67,7 @@ int main(int argc, char **argv)
 
         if (row[5] == "get")
         {
-            shards->feed(row[1]);
+            shards->feed(row[1], strtoul(row[3].c_str(), NULL, 10));
         }
     }
 

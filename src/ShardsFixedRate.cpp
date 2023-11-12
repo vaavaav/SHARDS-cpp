@@ -28,22 +28,24 @@ uint32_t ShardsFixedRate::getDistance(std::string const &key)
     return distance;
 }
 
-void ShardsFixedRate::updateHistogram(uint32_t bucket)
+void ShardsFixedRate::updateHistogram(uint32_t bucket, size_t const range)
 {
-    auto const [pair, inserted] = m_distanceHistogram.emplace(bucket, 1);
-    if (!inserted)
-    {
-        pair->second++;
+    for (size_t i = 0; i <= range; i++) {
+        auto const [pair, inserted] = m_distanceHistogram.emplace(bucket + i * kBucketSize, 1);
+        if (!inserted)
+        {
+            pair->second++;
+        }
     }
 }
 
-void ShardsFixedRate::feed(std::string const &key)
+void ShardsFixedRate::feed(std::string const &key, size_t const &itemSize)
 {
     if (Shards::hash(key) % kP < kT)
     {
         m_objectCounter++;
         uint32_t const distance = getDistance(key) / kR;
-        updateHistogram(distance == 0 ? 0 : ((distance - 1) / kBucketSize) * kBucketSize + kBucketSize);
+        updateHistogram(distance == 0 ? 0 : ((distance - 1) / kBucketSize) * kBucketSize + kBucketSize, itemSize / kBucketSize);
     }
 }
 

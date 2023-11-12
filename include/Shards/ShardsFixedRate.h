@@ -11,7 +11,7 @@ class ShardsFixedRate : public Shards
 
     uint32_t m_objectCounter{0};
 
-    inline void updateHistogram(uint32_t const bucket);
+    inline void updateHistogram(uint32_t const bucket, size_t const range);
     inline uint32_t getDistance(std::string const &key);
 
 public:
@@ -22,7 +22,7 @@ public:
 
     ShardsFixedRate(uint64_t T, uint64_t P, uint32_t bucketSize = 1);
     ShardsFixedRate(double R, uint32_t bucketSize = 1);
-    void feed(std::string const &key) override final;
+    void feed(std::string const &key, size_t const &itemSize) override final;
     std::map<uint32_t, double> mrc() override final;
     void clear() override final;
 };

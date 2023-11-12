@@ -9,7 +9,7 @@ protected:
     static uint64_t hash(std::string const &key);
 
 public:
-    virtual void feed(std::string const &key) = 0;
+    virtual void feed(std::string const &key, size_t const &itemSize) = 0;
     virtual std::map<uint32_t, double> mrc() = 0;
     virtual void clear() = 0;
 

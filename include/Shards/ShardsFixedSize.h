@@ -21,7 +21,7 @@ class ShardsFixedSize : public Shards
     std::multimap<uint64_t, std::string> m_keysPerT;
 
     inline uint32_t getDistance(std::string const &key);
-    inline void updateHistogram(uint32_t const bucket);
+    inline void updateHistogram(uint32_t const bucket, size_t const range);
     inline void setT(uint64_t newT);
 
 public:
@@ -30,7 +30,7 @@ public:
     uint32_t const kSMax{1};
     ShardsFixedSize(uint64_t T0, uint64_t P, uint32_t SMax = 1, uint32_t bucketSize = 1);
     ShardsFixedSize(double R0, uint32_t SMax = 1, uint32_t bucketSize = 1);
-    void feed(std::string const &key) override final;
+    void feed(std::string const &key, size_t const& itemSize) override final;
     std::map<uint32_t, double> mrc() override final;
     void clear() override final;
 };

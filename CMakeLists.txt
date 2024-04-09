@@ -50,12 +50,3 @@ install(
   NAMESPACE ${PROJECT_NAME}::
   DESTINATION ${CMAKE_INSTALL_DIR}
 )
-
-option(BUILD_TESTS " Build tests " OFF)
-
-if(BUILD_TESTS)
-  add_subdirectory(ext/cxxopts)
-  add_executable(ShardsTest test/main.cpp)
-  target_link_libraries(ShardsTest ${PROJECT_NAME})
-  target_include_directories(ShardsTest PRIVATE ext/cxxopts/include)
-endif()
